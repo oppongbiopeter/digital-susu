@@ -20,6 +20,8 @@ function ensurePack() {
     FAQ.push(["Q11", "Can I take the savings out early?", "Not while the box is open. Break box early on your profile closes it the same way a missed month does. Your remaining savings come back. The record closes. It does not become a debt."]);
   }
   state.loans.forEach(function (l) { if (l.pullWindow == null) l.pullWindow = false; });
+  if (!state.packTasks) state.packTasks = { tech: false, risk: false, market: false, compliance: false };
+  if (!state.funnel) state.funnel = { started: 0, finished: 0 };
 }
 
 function factsView() {
@@ -80,28 +82,95 @@ function scorecardAdmin() {
       <div class="row-card"><span>Reached month 6</span><b>${Math.round(m6 / n * 100)}%</b></div>
       <div class="row-card"><span>Finished 12</span><b>${Math.round(m12 / n * 100)}%</b></div>
       <div class="row-card"><span>Grace against closed</span><b>${grace} open, ${closed} closed</b></div>
+      <div class="row-card"><span>Signup finished</span><b>${state.funnel && state.funnel.started ? Math.round(state.funnel.finished / state.funnel.started * 100) + "% of " + state.funnel.started : "No new signup yet"}</b></div>
     </div>`;
 }
+function packTasks() {
+  return [
+    ["tech", "Technology", "Sandbox pulls, the month marker, USSD, and a webhook that refuses a duplicate."],
+    ["risk", "Risk", "72-hour retry, 15-day grace, then a close. A closed box is not tagged as a bad debt."],
+    ["market", "Market", "Makola and Kejetia first, then the flyer and " + cfg().ussdCode + "."],
+    ["compliance", "Compliance", "Key facts before signup, separate consent, and no chats or photos."]
+  ];
+}
+function loiText() {
+  const bank = cfg().bankName;
+  const firm = (state.sandbox && state.sandbox.firmName) || "Digital Susu";
+  return firm + "\n\nTo the Head of Retail, " + bank + ".\n\nWe propose a custody partnership for Digital Susu. The customer chooses a savings amount. It is pushed to " + bank + " and twelve months are marked from it. " + bank + " files the credit record. We run the app, USSD " + cfg().ussdCode + ", the market agents, and first-line support. " + bank + " holds the money, the ledger on its core, and the licence.\n\nA first pilot is capped, region-locked, and filed together under the Bank of Ghana sandbox. The savings stay locked. If a customer stops, the box closes and they do not owe a balance.\n\nWe license the software. " + bank + " does not own the code, the score, or the market list.\n\nThis letter is not a contract.\n\n" + firm;
+}
+function flyerText() {
+  return "DO SUSU FOR A YEAR AND BUILD YOUR CREDIT\n\nChoose what you save. " + cfg().bankName + " keeps it. Twelve months later it comes back, and the bank has the record.\n\nYou need a Ghana Card and a mobile money wallet.\nActivation is " + money(cfg().setupFee) + ", once. There is no second bill in this app.\n\nIf the market is slow, nobody comes to the shop. The box closes and you do not owe a pesewa.\n\nDial " + cfg().ussdCode + " or ask an agent at the market.";
+}
+function townHallText() {
+  return "Ameeeooo.\n\nThe banks ask for a payslip you do not have. This one does not. You choose what to save. It stays at " + cfg().bankName + ".\n\nIf the market is slow and you stop, nobody comes to the shop, and you do not owe a pesewa. If you finish the year, the savings come back.\n\nDial " + cfg().ussdCode + ", or see the agent on this floor.";
+}
+function radioText() {
+  return "Sister, the rain stopped the market. The old lender will come for the stock. This one is different.\n\nDial " + cfg().ussdCode + ". You choose what to save. The bank locks it. If you cannot continue, the box closes and you owe nothing. If you finish the year, the savings come back.";
+}
+function marketKit() {
+  return `<div class="card flyer"><b>DO SUSU FOR A YEAR</b><p>${esc(flyerText()).replace(/\n/g, "<br>")}</p></div>
+    <details class="faq"><summary><b>Town hall</b> Say this in the market</summary><p class="hint">${esc(townHallText())}</p></details>
+    <details class="faq"><summary><b>Radio</b> 60 seconds</summary><p class="hint">${esc(radioText())}</p></details>
+    <div class="card"><b>Do not say this on the floor</b><p class="hint">Do not promise a profit. Do not say they are buying a treasury bill. Do not say the amount is fixed. Do not say we file the credit bureau. The bank does that.</p></div>`;
+}
+function limitsHtml() {
+  const rows = [
+    ["We file the credit bureau ourselves", false, "The bank files it. We only produce the report."],
+    ["The savings amount is fixed", false, "The customer chooses it. GH₵ 600 is only the illustrated bank story."],
+    ["There is a second monthly fee", false, "This app charges the activation fee only, unless a super admin changes the product."],
+    ["A return is guaranteed", !!(state.sec && state.sec.guaranteedReturnCopy), "Switch: guaranteed return copy."],
+    ["The box earns a yield", !!(state.sec && state.sec.customerYieldLanguage), "Switch: customer yield language."],
+    ["Customers can buy treasury bills here", !!(state.sec && state.sec.tbillCustomerOffer), "Switch: treasury bills for customers."]
+  ];
+  return `<div class="list">${rows.map(function (row) {
+    const on = row[1];
+    return `<div class="row-card"><div><b>${esc(row[0])}</b><div class="small muted">${esc(row[2])}</div></div><span class="badge ${on ? "b-bad" : "b-ok"}">${on ? "Switch on" : "Off"}</span></div>`;
+  }).join("")}</div>
+  <p class="hint">Off is the correct state until a securities registration is marked in force. The switches themselves sit under SEC switches.</p>`;
+}
 function packAdmin() {
+  const tab = state.packTab || "room";
+  const tabs = [["room", "Room"], ["letter", "Letter"], ["split", "Split"], ["flyer", "Flyer"], ["market", "Market"], ["limits", "Limits"]];
+  let body = "";
+  if (tab === "room") {
+    body = `<div class="card"><b>Who we partner with</b><p class="hint">A licensed bank or savings and loans. Not a licence of our own from the Bank of Ghana. Not a lender that already sells a credit builder. They hold the savings. We keep the app.</p></div>
+      <div class="card"><b>Opening line</b><p class="hint">We manufacture customers the bank can trust. They hold the savings. We run the app, the market, and the support. If someone stops, the box closes and nobody is left owing.</p></div>
+      <h3>After a yes</h3>
+      ${packTasks().map(function (task) {
+        const done = state.packTasks && state.packTasks[task[0]];
+        return `<label class="check"><input type="checkbox" data-pack-task="${task[0]}" ${done ? "checked" : ""}><span><b>${esc(task[1])}</b> ${esc(task[2])}</span></label>`;
+      }).join("")}`;
+  }
+  if (tab === "letter") {
+    body = `<p class="hint">Template only. It is not signed. The bank name comes from product controls.</p>
+      <pre class="mono">${esc(loiText())}</pre>
+      <button class="btn" id="copy-loi">Copy letter</button>
+      <button class="btn-ghost" id="download-loi">Download letter</button>
+      <h3>What we keep</h3>
+      <p class="hint">The bank gets a licence to use the service in Ghana. It does not get the code, the score, or the right to hand the app to someone else. A mutual non-disclosure comes before any schema is shared. Ghana law. Three years.</p>`;
+  }
+  if (tab === "split") {
+    body = `<p class="hint">Negotiation numbers for the room, not a signed split. Treasury-bill activity stays off in the product.</p>
+      <table><tr><th>Stream</th><th>Bank</th><th>Us</th><th>Why</th></tr>
+        <tr><td>Yield on locked savings</td><td>60%</td><td>40%</td><td>They hold the licence and the money.</td></tr>
+        <tr><td>Activation fee</td><td>20%</td><td>80%</td><td>We pay the market and the scan.</td></tr>
+        <tr><td>Monthly admin fee, if any</td><td>30%</td><td>70%</td><td>We run the app. They clear the wallet pull.</td></tr>
+        <tr><td>A later loan they fund</td><td>70%</td><td>30%</td><td>They take the credit risk. We made the introduction.</td></tr>
+      </table>`;
+  }
+  if (tab === "flyer") {
+    body = `<div class="card flyer"><p class="kicker">${esc(cfg().bankName)}</p><b>DO SUSU FOR A YEAR AND BUILD YOUR CREDIT</b><p>${esc(flyerText()).replace(/\n/g, "<br>")}</p></div>
+      <button class="btn" id="copy-flyer">Copy flyer</button>
+      <button class="btn-ghost" id="download-flyer">Download flyer</button>`;
+  }
+  if (tab === "market") {
+    body = `<h3>Town hall</h3><pre class="mono">${esc(townHallText())}</pre><button class="btn" id="copy-hall">Copy town hall</button>
+      <h3>Radio</h3><pre class="mono">${esc(radioText())}</pre><button class="btn" id="copy-radio">Copy radio</button>`;
+  }
+  if (tab === "limits") body = limitsHtml();
   return `<h2>Partnership pack</h2>
-    <p class="hint">Pitch, letter of intent, revenue split, and scripts live in strategy.md. This screen is the part you use in the room. The illustrated GH₵ 600 case is the bank story. In the app the customer chooses the amount.</p>
-    <div class="card"><b>Who we partner with</b><p class="hint">A licensed bank or savings and loans, not a direct Bank of Ghana license, and not a competing lender. They hold the savings. We keep the app.</p></div>
-    <div class="card"><b>Opening line</b><p class="hint">We manufacture customers the bank can trust. They hold the savings. We run the app, the market, and the support. If someone stops, the box closes and nobody is left owing.</p></div>
-    <table><tr><th>Stream</th><th>Bank</th><th>Us</th></tr>
-      <tr><td>Treasury yield on locked savings</td><td>60%</td><td>40%</td></tr>
-      <tr><td>Activation fee</td><td>20%</td><td>80%</td></tr>
-      <tr><td>Any monthly admin fee</td><td>30%</td><td>70%</td></tr>
-      <tr><td>Later loan the bank funds</td><td>70%</td><td>30% introduction</td></tr>
-    </table>
-    <p class="hint">Treasury bills stay off unless super admin turns that switch on. We are not registered with the Securities and Exchange Commission.</p>
-    <h3>After a yes</h3>
-    <div class="list">
-      <div class="row-card"><span>Technology</span><b>Sandbox pulls, ledger, USSD</b></div>
-      <div class="row-card"><span>Risk</span><b>Grace, set-off, no debt tag</b></div>
-      <div class="row-card"><span>Market</span><b>Makola and Kejetia, *385#</b></div>
-    </div>
-    <h3>Flyer line</h3>
-    <p class="hint">Do susu for a year and build your credit. Choose what you save. The bank keeps it safe. Twelve months later it comes back, and the bank has the record.</p>`;
+    <div class="choice-row">${tabs.map(function (item) { return `<button class="choice ${tab === item[0] ? "on" : ""}" data-pack-tab="${item[0]}">${item[1]}</button>`; }).join("")}</div>
+    ${body}`;
 }
 
 const _signupP = signupView;
@@ -153,6 +222,19 @@ adminShell = function (user) {
   );
 };
 
+const _agentPageP = agentPage;
+agentPage = function (agent) {
+  return _agentPageP(agent).replace(
+    "<p class=\"hint\">You can also enroll",
+    marketKit() + "<p class=\"hint\">You can also enroll"
+  );
+};
+const _finishP = finishSignup;
+finishSignup = function () {
+  if (!state.funnel) state.funnel = { started: 0, finished: 0 };
+  state.funnel.finished += 1;
+  return _finishP();
+};
 const _payP = postPayment;
 postPayment = function (user, loan, channel) {
   const result = _payP(user, loan, channel);
@@ -186,6 +268,8 @@ bind = function () {
     state.signup.terms = document.getElementById("c-terms").checked;
     state.signup.facts = document.getElementById("c-facts").checked;
     if (!state.signup.scan || !state.signup.terms || !state.signup.facts) return fail("Read the key facts, then accept both permissions."), render();
+    if (!state.funnel) state.funnel = { started: 0, finished: 0 };
+    state.funnel.started += 1;
     state.signup.scanning = true;
     render();
     setTimeout(function () {
@@ -207,6 +291,48 @@ bind = function () {
       if (input && text) input.value = text.textContent;
     };
   });
+  document.querySelectorAll("[data-pack-tab]").forEach(function (el) {
+    el.onclick = function () { state.packTab = el.dataset.packTab; render(); };
+  });
+  document.querySelectorAll("[data-pack-task]").forEach(function (el) {
+    el.onchange = function () {
+      state.packTasks[el.dataset.packTask] = el.checked;
+      audit("Pack task " + el.dataset.packTask + (el.checked ? " done" : " open"));
+      save();
+    };
+  });
+  function copyNamed(id, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.onclick = function () {
+      const area = document.createElement("textarea");
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+      flash("Copied.");
+      render();
+    };
+  }
+  function downloadNamed(id, name, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.onclick = function () {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+      a.download = name;
+      a.click();
+      flash("Downloaded.");
+      render();
+    };
+  }
+  copyNamed("copy-loi", loiText());
+  copyNamed("copy-flyer", flyerText());
+  copyNamed("copy-hall", townHallText());
+  copyNamed("copy-radio", radioText());
+  downloadNamed("download-loi", "digital-susu-letter.txt", loiText());
+  downloadNamed("download-flyer", "digital-susu-flyer.txt", flyerText());
 };
 
 const _renderP = render;

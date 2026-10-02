@@ -170,6 +170,8 @@ th { color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 hr.soft { border: 0; border-top: 1px solid var(--line); margin: 14px 0; }
 .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 12px; background: #14221c; color: #e7f6ee; border-radius: 14px; padding: 12px; white-space: pre-wrap; line-height: 1.45; }
+.flyer { background: #f4efe4; color: #1c1914; border: 1px solid #e4d3a8; }
+.flyer b { display: block; font-size: 18px; letter-spacing: 0.04em; margin: 6px 0; }
 .check { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 13px; }
 
 @media (max-width: 900px) {
