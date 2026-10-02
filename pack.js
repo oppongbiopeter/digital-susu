@@ -128,9 +128,34 @@ function limitsHtml() {
   }).join("")}</div>
   <p class="hint">Off is the correct state until a securities registration is marked in force. The switches themselves sit under SEC switches.</p>`;
 }
+function briefText() {
+  const live = state.loans.filter(function (l) { return l.status === "ACTIVE" || l.status === "GRACE"; }).reduce(function (s, l) { return s + Number(l.locked || 0); }, 0);
+  return "ONE-PAGE BRIEF\n\nDigital Susu builds a credit record from savings the customer chooses. " + cfg().bankName + " holds the money and files the bureau. We run the app, " + cfg().ussdCode + ", the market, and first-line support.\n\nLive locked savings in this book: " + money(live) + ".\n\nIllustrated case only, not a forecast: 100,000 boxes at GH₵ 600 would be GH₵ 60,000,000. A 24% treasury illustration on that pool is about GH₵ 14,400,000 gross, before fees. Customers are not offered bills. That switch stays off.\n\nActivation in this app: " + money(cfg().setupFee) + ", once. A GH₵ 1 monthly fee is an illustration for the bank, not a second bill on the customer screen.";
+}
+function riskText() {
+  return "RISK ANSWERS\n\nIs the bureau record legal?\nThe customer agrees to a secured savings record. The bank files it as secured, not as an open loan. We do not file it ourselves.\n\nWhat if they miss a month?\n72 hours of retry, then 15 days of grace, then the box closes from the locked savings. Nothing is left owing, so it is not a bad debt.\n\nAre the fees hidden?\nThe key facts show the activation fee, the lock, and the close before signup. There is no second bill on the customer screen.\n\nWhat if mobile money is down?\nThe pull retries for 72 hours. A network delay is not a missed month. A duplicate reference is rejected.";
+}
+function ndaText() {
+  const firm = (state.sandbox && state.sandbox.firmName) || "Digital Susu";
+  return "MUTUAL NON-DISCLOSURE\nTemplate. Not signed.\n\nBetween " + firm + " and " + cfg().bankName + ".\nPurpose: talks about a Digital Susu custody partnership.\nCovers schemas, the score method, and the commercial split.\nUse it only to evaluate that partnership.\nNo ownership of code, score, or market list passes to the bank.\nThe bank may not copy the software or hand it to anyone else.\nTerm: 3 years.\nLaw: Republic of Ghana. High Court, Commercial Division, Accra.\nData protection: Act 843. No chats, passwords, or photos.";
+}
+function bogText() {
+  const firm = (state.sandbox && state.sandbox.firmName) || "Digital Susu";
+  return "NOTE TO THE BANK OF GHANA\nTemplate. Not filed.\n\n" + firm + " and " + cfg().bankName + " ask to run a capped sandbox pilot of Digital Susu.\nThe customer chooses a savings amount. The bank holds it. Twelve months are marked from it. The bank files the credit record as a secured facility.\nThere is no open debt. A missed month closes the box. The customer does not owe a balance.\nFees on the customer screen are the activation fee only, shown before signup.\nThe pilot is region-locked and stays inside the cohort cap.\n\nThis note does not ask for a standalone licence.";
+}
+function boardText() {
+  return "BOARD MINUTE\nTemplate. Not passed.\n\nThe board of the technology firm notes a proposed custody partnership with " + cfg().bankName + ".\nThe bank holds customer savings. The firm keeps the app, the score, and the market list.\nThe pilot cap and the region are set in the sandbox console.\nSecurities language stays off until a registration is marked in force.\nThe minute does not approve a treasury-bill product for customers.";
+}
+function speechText() {
+  return "TEN MINUTES\n\n0 to 2. The problem is a thin credit file and expensive retail deposits. We do not start by lending cash.\n\n2 to 5. The customer chooses a savings amount. It is pushed to " + cfg().bankName + ". Twelve months are marked from it. If they stop, the box closes and they owe nothing.\n\n5 to 8. The illustrated case is 100,000 boxes. That number is a picture, not a result. The live book is on the scorecard. Fees on screen are the activation fee only.\n\n8 to 10. At the end of the year the bank has a record and a customer who already saves with them. We keep the software. They keep the licence and the money.";
+}
+function investorText() {
+  const firm = (state.sandbox && state.sandbox.firmName) || "Digital Susu";
+  return "NOTE TO AN INVESTOR\nTemplate. Not sent.\n\n" + firm + " is the app and the market operation behind a bank-held savings record in Ghana.\nThe bank holds the money and the licence. We do not lend the principal.\nCustomers choose the amount. The illustrated GH₵ 600 case is a picture for the bank, not the product rule.\nA missed month closes clean. It is not booked as a bad debt.\nSecurities offers are off. We are not asking the investor to fund a loan book.\n\nAsk for a short call. Attach the one-page brief, not a promise of yield.";
+}
 function packAdmin() {
   const tab = state.packTab || "room";
-  const tabs = [["room", "Room"], ["letter", "Letter"], ["split", "Split"], ["flyer", "Flyer"], ["market", "Market"], ["limits", "Limits"]];
+  const tabs = [["room", "Room"], ["brief", "Brief"], ["letter", "Letter"], ["split", "Split"], ["risk", "Risk"], ["filings", "Filings"], ["flyer", "Flyer"], ["market", "Market"], ["speech", "Speech"], ["limits", "Limits"]];
   let body = "";
   if (tab === "room") {
     body = `<div class="card"><b>Who we partner with</b><p class="hint">A licensed bank or savings and loans. Not a licence of our own from the Bank of Ghana. Not a lender that already sells a credit builder. They hold the savings. We keep the app.</p></div>
@@ -140,6 +165,9 @@ function packAdmin() {
         const done = state.packTasks && state.packTasks[task[0]];
         return `<label class="check"><input type="checkbox" data-pack-task="${task[0]}" ${done ? "checked" : ""}><span><b>${esc(task[1])}</b> ${esc(task[2])}</span></label>`;
       }).join("")}`;
+  }
+  if (tab === "brief") {
+    body = `<pre class="mono">${esc(briefText())}</pre><button class="btn" id="copy-brief">Copy brief</button><button class="btn-ghost" id="download-brief">Download brief</button>`;
   }
   if (tab === "letter") {
     body = `<p class="hint">Template only. It is not signed. The bank name comes from product controls.</p>
@@ -158,6 +186,15 @@ function packAdmin() {
         <tr><td>A later loan they fund</td><td>70%</td><td>30%</td><td>They take the credit risk. We made the introduction.</td></tr>
       </table>`;
   }
+  if (tab === "risk") {
+    body = `<pre class="mono">${esc(riskText())}</pre><button class="btn" id="copy-risk">Copy risk answers</button>`;
+  }
+  if (tab === "filings") {
+    body = `<h3>Non-disclosure</h3><pre class="mono">${esc(ndaText())}</pre><button class="btn" id="copy-nda">Copy NDA</button><button class="btn-ghost" id="download-nda">Download NDA</button>
+      <h3>Bank of Ghana note</h3><pre class="mono">${esc(bogText())}</pre><button class="btn" id="copy-bog">Copy BoG note</button><button class="btn-ghost" id="download-bog">Download BoG note</button>
+      <h3>Board minute</h3><pre class="mono">${esc(boardText())}</pre><button class="btn" id="copy-board">Copy minute</button>
+      <h3>Investor note</h3><pre class="mono">${esc(investorText())}</pre><button class="btn" id="copy-investor">Copy investor note</button>`;
+  }
   if (tab === "flyer") {
     body = `<div class="card flyer"><p class="kicker">${esc(cfg().bankName)}</p><b>DO SUSU FOR A YEAR AND BUILD YOUR CREDIT</b><p>${esc(flyerText()).replace(/\n/g, "<br>")}</p></div>
       <button class="btn" id="copy-flyer">Copy flyer</button>
@@ -166,6 +203,9 @@ function packAdmin() {
   if (tab === "market") {
     body = `<h3>Town hall</h3><pre class="mono">${esc(townHallText())}</pre><button class="btn" id="copy-hall">Copy town hall</button>
       <h3>Radio</h3><pre class="mono">${esc(radioText())}</pre><button class="btn" id="copy-radio">Copy radio</button>`;
+  }
+  if (tab === "speech") {
+    body = `<pre class="mono">${esc(speechText())}</pre><button class="btn" id="copy-speech">Copy speech</button>`;
   }
   if (tab === "limits") body = limitsHtml();
   return `<h2>Partnership pack</h2>
@@ -331,8 +371,35 @@ bind = function () {
   copyNamed("copy-flyer", flyerText());
   copyNamed("copy-hall", townHallText());
   copyNamed("copy-radio", radioText());
+  copyNamed("copy-brief", briefText());
+  copyNamed("copy-risk", riskText());
+  copyNamed("copy-nda", ndaText());
+  copyNamed("copy-bog", bogText());
+  copyNamed("copy-board", boardText());
+  copyNamed("copy-investor", investorText());
+  copyNamed("copy-speech", speechText());
   downloadNamed("download-loi", "digital-susu-letter.txt", loiText());
   downloadNamed("download-flyer", "digital-susu-flyer.txt", flyerText());
+  downloadNamed("download-brief", "digital-susu-brief.txt", briefText());
+  downloadNamed("download-nda", "digital-susu-nda.txt", ndaText());
+  downloadNamed("download-bog", "digital-susu-bog-note.txt", bogText());
+  document.querySelectorAll("[data-escalate]").forEach(function (el) {
+    el.onclick = function () {
+      const t = state.tickets.find(function (x) { return x.id === el.dataset.escalate; });
+      const u = state.users.find(function (x) { return x.id === t.userId; });
+      const loan = u ? loanOf(u.id) : null;
+      t.status = "TIER2";
+      t.tier = 2;
+      t.replies.push({
+        by: "Tier 2",
+        text: "TICKET " + t.id + "\nCATEGORY: CORE_LEDGER_SYNC\nPHONE: " + (u ? u.phone : "") + "\nBOX: " + (loan ? loan.status : "none") + "\nACTION: Match the reference. Do not mark the month twice.",
+        at: todayISO(0)
+      });
+      audit("Ticket escalated to tier 2");
+      flash("Escalated with a tier-2 note.");
+      render();
+    };
+  });
 };
 
 const _renderP = render;

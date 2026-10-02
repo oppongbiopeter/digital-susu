@@ -81,3 +81,15 @@ SMS arrived and the ring did not move: the money is safe. We match the reference
 ## What we will not say
 
 We will not say the customer is buying a treasury bill. We will not say a return is guaranteed. We will not say we file the credit bureau ourselves. The bank does that. Those switches exist in the app and stay off.
+
+## Also in the app
+
+Super admin, Pack:
+
+- Brief, with the live locked savings and the 100,000-box illustration marked as a picture, not a forecast.
+- Risk answers: bureau filing, a missed month, fees, and a mobile-money outage.
+- Filings: non-disclosure, Bank of Ghana note, board minute, investor note. All templates. None of them are signed or sent.
+- Speech: ten minutes, four beats.
+
+Help desk escalation writes a tier-2 note: phone, box status, and an instruction not to mark the month twice.
+
