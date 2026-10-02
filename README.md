@@ -29,6 +29,9 @@ Open `index.html` in a browser. No install step. The book includes about 500 dem
 - USSD `*385#`, susu collector desk, ledger audit, forget-me queue
 - Bank portal: users, core connection, dual-control set-off
 - Securities switches stay off until registration is marked in force
+- Key facts before signup, help-desk scripts, a 72-hour retry, and a pilot scorecard
+
+`strategy.md` is the bank pack: letter of intent, revenue split, flyer, and what we will not say. It is not a signed contract.
 
 `strategy.docx` is the partnership material that does not belong in the product itself.
 
