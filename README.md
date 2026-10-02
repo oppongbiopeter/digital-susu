@@ -1,16 +1,18 @@
 # Digital Susu
 
-Ghana micro-credit builder. A customer locks a GH₵600 box, pays GH₵50 a month (GH₵5 of their own, GH₵45 swept from the box), and builds an XDS file with a partner bank. It is a credit-builder, not a cash loan and not a securities product.
+Ghana credit-builder. The customer chooses how much to save. That amount is pushed to the partner bank and twelve months are marked from it. The bank files the credit record. This is not a cash loan and not a securities product.
 
-Open `index.html` in a browser. No install step.
+Open `index.html` in a browser. No install step. The book includes about 500 demo customers. Their PIN is `1234`.
 
 ## Demo logins
 
 | Who | ID | PIN |
 | --- | --- | --- |
 | Customer | `0244111001` | `1234` |
-| Help desk | `support.desk` | `2468` |
-| Ops | `ops.admin` | `1357` |
+| Fast-track pool | `0244777007` | `1234` |
+| Susu collector | `agent.makola` | `5555` |
+| Help desk | `help.desk` | `1357` |
+| Ops | `ops.adjei` | `2468` |
 | Super admin | `super.admin` | `9090` |
 | Bank admin | `bank.admin` | `1111` |
 | Treasury | `treasury.osei` | `2222` |
@@ -19,11 +21,15 @@ Open `index.html` in a browser. No install step.
 
 ## What is in the app
 
-- Customer signup, box, pay, group susu, USSD, FAQ, help desk, reminders
-- Bank account linking through a GhIPSS-style name enquiry
-- Bank portal: users, core connection, treasury, dual-control set-off
-- Super admin permissions, and Securities and Exchange Commission switches that stay off until registration is marked in force
+- Signup with a chosen savings amount, autopay, and a 12-month progress view
+- Score of 700 or more skips the lockbox and waits in a pool the super admin sends to the bank
+- Bronze to Platinum ladder, Silver cushion, Gold phone finance with a lock if a month is missed
+- Remittance split, group welfare cover, credit-life / fire / hospital-cash claims
+- Mail queue for missed months, grace, and releases
+- USSD `*385#`, susu collector desk, ledger audit, forget-me queue
+- Bank portal: users, core connection, dual-control set-off
+- Securities switches stay off until registration is marked in force
 
-`strategy.docx` is the partnership and go-to-market material that does not belong in the product itself.
+`strategy.docx` is the partnership material that does not belong in the product itself.
 
 Sandbox tokens in the bank portal are demo placeholders. Do not treat them as live credentials.

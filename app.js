@@ -1,4 +1,4 @@
-const STORAGE_KEY = "mcb-digital-susu-v1";
+const STORAGE_KEY = "mcb-digital-susu-v2";
 
 const DEFAULT_CONFIG = {
   productName: "Digital Susu",
